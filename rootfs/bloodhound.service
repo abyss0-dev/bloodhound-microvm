@@ -1,0 +1,15 @@
+[Unit]
+Description=Bloodhound eBPF tracing daemon
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStartPre=-/bin/sh -c 'for iface in $(ls /sys/class/net); do tc qdisc add dev "$iface" clsact 2>/dev/null; done'
+ExecStart=/opt/bloodhound/bloodhound --uid 1000
+StandardOutput=append:/var/log/bloodhound.ndjson
+StandardError=journal+console
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

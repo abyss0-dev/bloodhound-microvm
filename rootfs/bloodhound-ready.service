@@ -1,0 +1,11 @@
+[Unit]
+Description=Report Bloodhound readiness to the serial console
+After=bloodhound.service
+Requires=bloodhound.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'for _ in $(seq 1 60); do if journalctl -u bloodhound.service --no-pager | grep -Fq "BPF programs loaded and attached" && grep -Fq "\"name\":\"heartbeat\"" /var/log/bloodhound.ndjson; then echo "Bloodhound microVM ready" >/dev/console; exit 0; fi; sleep 1; done; echo "Bloodhound microVM readiness failed" >/dev/console; exit 1'
+
+[Install]
+WantedBy=multi-user.target
