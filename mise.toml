@@ -7,6 +7,7 @@ description = "Check shell syntax and immutable GitHub Action pins"
 run = """
 for script in scripts/*.sh; do bash -n "$script"; done
 scripts/test-readiness.sh
+scripts/test-setup.sh
 pinact run -fix=false -no-api
 """
 

@@ -1,0 +1,44 @@
+name: Set up Bloodhound microVM
+description: Download and verify a released Bloodhound-ready Firecracker bundle
+
+inputs:
+  version:
+    description: Release version, for example v0.1.0
+    required: true
+  sha256:
+    description: Expected SHA-256 digest of the compressed release bundle
+    required: true
+  destination:
+    description: Empty directory where the bundle is extracted
+    required: false
+
+outputs:
+  bundle-path:
+    description: Directory containing the verified bundle
+    value: ${{ steps.setup.outputs.bundle-path }}
+  kernel-path:
+    description: Firecracker guest kernel
+    value: ${{ steps.setup.outputs.kernel-path }}
+  rootfs-path:
+    description: Bloodhound-ready base root filesystem
+    value: ${{ steps.setup.outputs.rootfs-path }}
+  firecracker-path:
+    description: Verified Firecracker binary
+    value: ${{ steps.setup.outputs.firecracker-path }}
+  firectl-path:
+    description: Verified firectl binary
+    value: ${{ steps.setup.outputs.firectl-path }}
+  manifest-path:
+    description: Bundle provenance manifest
+    value: ${{ steps.setup.outputs.manifest-path }}
+
+runs:
+  using: composite
+  steps:
+    - id: setup
+      shell: bash
+      env:
+        BUNDLE_DESTINATION: ${{ inputs.destination }}
+        BUNDLE_SHA256: ${{ inputs.sha256 }}
+        BUNDLE_VERSION: ${{ inputs.version }}
+      run: "${GITHUB_ACTION_PATH}/setup.sh"

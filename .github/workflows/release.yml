@@ -1,20 +1,27 @@
-name: CI
+name: Release
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: Semantic version used for a non-publishing distribution dry run
+        required: true
+        default: v0.0.0-dev
 
 permissions:
   contents: read
 
 jobs:
-  build-and-boot:
-    name: Build and boot Bloodhound microVM
+  build-verify-package:
+    name: Build, verify, and package release
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      RELEASE_VERSION: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
     steps:
       # checkout v7 runs on Node.js 24, the latest LTS line as of 2026-08-21.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,14 +50,29 @@ jobs:
       - name: Boot bundle and verify Bloodhound
         run: mise run smoke
 
-      - name: Package and consume the release bundle
+      - name: Package release
+        run: scripts/package-release.sh "${RELEASE_VERSION}"
+
+      - name: Consume and verify packaged release
         run: |
-          scripts/package-release.sh v0.0.0-ci
-          archive="release/bloodhound-microvm-v0.0.0-ci-x86_64.tar.zst"
+          archive="release/bloodhound-microvm-${RELEASE_VERSION}-x86_64.tar.zst"
           digest="$(sha256sum "${archive}" | cut -d ' ' -f 1)"
           BUNDLE_DESTINATION="${RUNNER_TEMP}/consumer-bundle" \
           BUNDLE_SHA256="${digest}" \
           BUNDLE_URL="file://${GITHUB_WORKSPACE}/${archive}" \
-          BUNDLE_VERSION=v0.0.0-ci \
+          BUNDLE_VERSION="${RELEASE_VERSION}" \
           GITHUB_OUTPUT="${RUNNER_TEMP}/setup-output" \
             setup/setup.sh
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive="release/bloodhound-microvm-${RELEASE_VERSION}-x86_64.tar.zst"
+          gh release create "${RELEASE_VERSION}" \
+            "${archive}" \
+            "${archive}.sha256" \
+            --generate-notes \
+            --title "Bloodhound microVM ${RELEASE_VERSION}" \
+            --verify-tag

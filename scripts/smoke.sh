@@ -5,15 +5,14 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 load_versions
 require_x86_64
+require_commands cp grep kill seq sleep tail
 
 readonly OUTPUT_DIR="${1:-${REPOSITORY_ROOT}/dist}"
 readonly WORK_DIR="${REPOSITORY_ROOT}/work/smoke"
-readonly FIRECRACKER_ARCHIVE="firecracker-${FIRECRACKER_VERSION}-x86_64.tgz"
-readonly FIRECRACKER_RELEASE_DIR="${WORK_DIR}/release-${FIRECRACKER_VERSION}-x86_64"
-readonly FIRECRACKER_BIN="${FIRECRACKER_RELEASE_DIR}/firecracker-${FIRECRACKER_VERSION}-x86_64"
-readonly FIRECTL_SOURCE="${WORK_DIR}/firectl"
-readonly FIRECTL_BIN="${WORK_DIR}/firectl-bin"
+readonly FIRECRACKER_BIN="${OUTPUT_DIR}/firecracker"
+readonly FIRECTL_BIN="${OUTPUT_DIR}/firectl"
 readonly VM_LOG="${WORK_DIR}/vm.log"
+readonly SMOKE_ROOTFS="${WORK_DIR}/rootfs.ext4"
 
 vm_pid=""
 cleanup() {
@@ -35,26 +34,16 @@ if [[ ! -r /dev/kvm || ! -w /dev/kvm ]]; then
 fi
 
 mkdir -p "${WORK_DIR}"
-curl -fsSLo "${WORK_DIR}/${FIRECRACKER_ARCHIVE}" \
-  "https://github.com/firecracker-microvm/firecracker/releases/download/${FIRECRACKER_VERSION}/${FIRECRACKER_ARCHIVE}"
-echo "${FIRECRACKER_ARCHIVE_SHA256}  ${WORK_DIR}/${FIRECRACKER_ARCHIVE}" | sha256sum --check
-tar -xzf "${WORK_DIR}/${FIRECRACKER_ARCHIVE}" -C "${WORK_DIR}"
-
-if [[ ! -d "${FIRECTL_SOURCE}/.git" ]]; then
-  git init --quiet "${FIRECTL_SOURCE}"
-  git -C "${FIRECTL_SOURCE}" remote add origin https://github.com/firecracker-microvm/firectl.git
+if [[ ! -x "${FIRECRACKER_BIN}" || ! -x "${FIRECTL_BIN}" ]]; then
+  echo "bundle does not contain executable Firecracker and firectl binaries" >&2
+  exit 1
 fi
-git -C "${FIRECTL_SOURCE}" fetch --quiet --depth=1 origin "${FIRECTL_COMMIT}"
-git -C "${FIRECTL_SOURCE}" checkout --quiet --detach FETCH_HEAD
-(
-  cd "${FIRECTL_SOURCE}"
-  GOPROXY="https://proxy.golang.org,direct" go build -trimpath -o "${FIRECTL_BIN}" .
-)
+cp --reflink=auto --sparse=always "${OUTPUT_DIR}/rootfs.ext4" "${SMOKE_ROOTFS}"
 
 "${FIRECTL_BIN}" \
   --firecracker-binary="${FIRECRACKER_BIN}" \
   --kernel="${OUTPUT_DIR}/vmlinux" \
-  --root-drive="${OUTPUT_DIR}/rootfs.ext4:rw" \
+  --root-drive="${SMOKE_ROOTFS}:rw" \
   --ncpus=2 \
   --memory=2048 \
   --kernel-opts="root=/dev/vda rw console=ttyS0 reboot=k panic=1 pci=off lsm=landlock,lockdown,yama,apparmor,bpf" \

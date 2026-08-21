@@ -10,5 +10,6 @@ mkdir -p "${OUTPUT_DIR}"
 
 "${REPOSITORY_ROOT}/scripts/build-kernel.sh" "${OUTPUT_DIR}"
 "${REPOSITORY_ROOT}/scripts/build-bloodhound.sh" "${OUTPUT_DIR}"
+"${REPOSITORY_ROOT}/scripts/build-runtime-tools.sh" "${OUTPUT_DIR}"
 "${REPOSITORY_ROOT}/scripts/build-rootfs.sh" "${OUTPUT_DIR}"
 "${REPOSITORY_ROOT}/scripts/write-manifest.sh" "${OUTPUT_DIR}"
