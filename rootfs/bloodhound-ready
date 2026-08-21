@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly JOURNALCTL_BIN="${JOURNALCTL_BIN:-journalctl}"
+readonly EVENT_LOG="${EVENT_LOG:-/var/log/bloodhound.ndjson}"
+readonly CONSOLE="${CONSOLE:-/dev/console}"
+readonly READINESS_ATTEMPTS="${READINESS_ATTEMPTS:-60}"
+readonly READINESS_INTERVAL_SECONDS="${READINESS_INTERVAL_SECONDS:-1}"
+
+for ((attempt = 1; attempt <= READINESS_ATTEMPTS; attempt++)); do
+  if "${JOURNALCTL_BIN}" -u bloodhound.service --no-pager | \
+      grep -F "BPF programs loaded and attached" >/dev/null && \
+      grep -Fq '"name":"heartbeat"' "${EVENT_LOG}"; then
+    echo "Bloodhound microVM ready" >"${CONSOLE}"
+    exit 0
+  fi
+  sleep "${READINESS_INTERVAL_SECONDS}"
+done
+
+echo "Bloodhound microVM readiness failed" >"${CONSOLE}"
+exit 1

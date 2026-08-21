@@ -6,6 +6,7 @@ pinact = "4.1.1"
 description = "Check shell syntax and immutable GitHub Action pins"
 run = """
 for script in scripts/*.sh; do bash -n "$script"; done
+scripts/test-readiness.sh
 pinact run -fix=false -no-api
 """
 

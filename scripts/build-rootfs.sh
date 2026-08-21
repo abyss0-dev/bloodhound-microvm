@@ -14,6 +14,7 @@ readonly IMAGE_TAG="bloodhound-microvm-rootfs"
 
 mkdir -p "${OUTPUT_DIR}" "${CONTEXT_DIR}"
 install -m 0755 "${OUTPUT_DIR}/bloodhound" "${CONTEXT_DIR}/bloodhound"
+install -m 0755 "${REPOSITORY_ROOT}/rootfs/bloodhound-ready" "${CONTEXT_DIR}/bloodhound-ready"
 install -m 0644 "${REPOSITORY_ROOT}/rootfs/Dockerfile" "${CONTEXT_DIR}/Dockerfile"
 install -m 0644 "${REPOSITORY_ROOT}/rootfs/bloodhound.service" "${CONTEXT_DIR}/bloodhound.service"
 install -m 0644 "${REPOSITORY_ROOT}/rootfs/bloodhound-ready.service" "${CONTEXT_DIR}/bloodhound-ready.service"
