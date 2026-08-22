@@ -31,5 +31,6 @@ git -C "${FIRECTL_SOURCE}" fetch --quiet --depth=1 origin "${FIRECTL_COMMIT}"
 git -C "${FIRECTL_SOURCE}" checkout --quiet --detach FETCH_HEAD
 (
   cd "${FIRECTL_SOURCE}"
-  GOPROXY="https://proxy.golang.org,direct" go build -trimpath -o "${OUTPUT_DIR}/firectl" .
+  GOPROXY="${GOPROXY:-https://proxy.golang.org,direct}" \
+    go build -trimpath -o "${OUTPUT_DIR}/firectl" .
 )
