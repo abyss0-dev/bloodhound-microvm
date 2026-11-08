@@ -22,13 +22,13 @@ replaces or extends the base systemd units.
 
 ## Pinned compatibility set
 
-The initial x86_64 bundle uses:
+The v0.2.0 x86_64 bundle uses:
 
 - Firecracker `v1.16.1`;
 - Amazon Linux kernel tag `kernel6.18-6.18.39-79.141.amzn2023`;
 - the Firecracker 6.18 guest config at commit
   `ca0b24d0c6cd4592dc541ff48cb94107869f9692`;
-- Bloodhound commit `46ff1dba3bf85b824bd57eb62aeb6afd04d65b14`.
+- Bloodhound commit `8db470c742c8cfb1be005e465430714a788aeeac`.
 
 The Firecracker config is extended by
 [`config/bloodhound.fragment`](config/bloodhound.fragment). The resolved config
@@ -63,7 +63,7 @@ both the setup Action implementation and the release archive digest:
   id: microvm
   uses: abyss0-dev/bloodhound-microvm/setup@<setup-action-commit-sha>
   with:
-    version: v0.1.0
+    version: v0.2.0
     sha256: <release-archive-sha256>
 
 - name: Prepare a run-specific rootfs
