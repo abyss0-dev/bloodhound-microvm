@@ -1,2 +1,5 @@
 /dist/
 /work/
+
+# Agent tooling (Gemini / Antigravity) writes skill files here; not part of this repository.
+/skills/
